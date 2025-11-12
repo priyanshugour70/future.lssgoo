@@ -33,6 +33,7 @@ export default function ComposeEmailPage() {
       Placeholder.configure({ placeholder: 'Write your email here...' }),
     ],
     content: '',
+    immediatelyRender: false, // Fix SSR hydration mismatch
     editorProps: {
       attributes: {
         class: 'tiptap min-h-[200px] p-4',
