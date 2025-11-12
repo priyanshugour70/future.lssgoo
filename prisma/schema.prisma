@@ -171,6 +171,7 @@ model Company {
   
   // Relations
   contactSource     ContactSource?
+  people            People[]
   
   @@map("companies")
   @@index([name])
@@ -197,4 +198,48 @@ model ContactSource {
   
   @@map("contact_sources")
   @@index([companyId])
+}
+
+model People {
+  id                String          @id @default(uuid())
+  fullName          String          @map("full_name")
+  passion           String?         @db.Text // What they're passionate about
+  bio               String?         @db.Text // About/description
+  profileUrl        String?         @map("profile_url") // Personal website, portfolio, etc.
+  photoUrl          String?         @map("photo_url") // Profile photo
+  notes             String[]        // Array of notes, links, post URLs, etc.
+  
+  // Relation to Company (optional)
+  companyId         String?         @map("company_id")
+  company           Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  
+  // Timestamps
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  
+  // Relations
+  contact           PeopleContact?
+  
+  @@map("people")
+  @@index([fullName])
+  @@index([companyId])
+}
+
+model PeopleContact {
+  id                String         @id @default(uuid())
+  peopleId          String         @unique @map("people_id")
+  people            People         @relation(fields: [peopleId], references: [id], onDelete: Cascade)
+  
+  linkedin          String?
+  instagram         String?
+  twitter           String?
+  email             String?
+  phoneNumber       String?        @map("phone_number")
+  
+  // Timestamps
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  
+  @@map("people_contacts")
+  @@index([peopleId])
 }

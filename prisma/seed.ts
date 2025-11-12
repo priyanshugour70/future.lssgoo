@@ -11,6 +11,8 @@ async function main() {
   await prisma.auditLog.deleteMany({});
   await prisma.session.deleteMany({});
   await prisma.account.deleteMany({});
+  await prisma.peopleContact.deleteMany({});
+  await prisma.people.deleteMany({});
   await prisma.contactSource.deleteMany({});
   await prisma.company.deleteMany({});
   await prisma.accelerator.deleteMany({});
@@ -469,6 +471,67 @@ async function main() {
 
   console.log('✅ Companies and contact sources created');
 
+  // Create People
+  console.log('Creating people...');
+  
+  await prisma.people.createMany({
+    data: [
+      {
+        fullName: 'Brian Chesky',
+        passion: 'Reimagining travel and creating a world where anyone can belong anywhere',
+        bio: 'Co-founder and CEO of Airbnb. Designer turned entrepreneur passionate about creating meaningful travel experiences.',
+        profileUrl: 'https://twitter.com/bchesky',
+        notes: ['Forbes 30 Under 30', 'TIME 100 Most Influential People'],
+        companyId: companies.find(c => c.name === 'Airbnb')?.id,
+      },
+      {
+        fullName: 'Patrick Collison',
+        passion: 'Building economic infrastructure for the internet',
+        bio: 'Co-founder and CEO of Stripe. Interested in progress studies and making online payments accessible globally.',
+        profileUrl: 'https://twitter.com/patrickc',
+        notes: ['Youngest self-made billionaire', 'Started Stripe at age 19'],
+        companyId: companies.find(c => c.name === 'Stripe')?.id,
+      },
+      {
+        fullName: 'Drew Houston',
+        passion: 'Simplifying the way people work together',
+        bio: 'Co-founder and CEO of Dropbox. MIT graduate who built Dropbox to solve his own problem of forgetting his USB drive.',
+        profileUrl: 'https://twitter.com/drewhouston',
+        notes: ['Forbes Cloud 100', 'Built Dropbox to $1B+ revenue'],
+        companyId: companies.find(c => c.name === 'Dropbox')?.id,
+      },
+      {
+        fullName: 'Melanie Perkins',
+        passion: 'Democratizing design and empowering creativity',
+        bio: 'Co-founder and CEO of Canva. Started with a school yearbook design tool and grew it into a $40B design platform.',
+        profileUrl: 'https://twitter.com/melcanva',
+        notes: ['One of youngest female CEOs of tech unicorn', 'Built Canva to $40B valuation'],
+        companyId: companies.find(c => c.name === 'Canva')?.id,
+      },
+      {
+        fullName: 'Ivan Zhao',
+        passion: 'Making software toolmaking ubiquitous',
+        bio: 'Co-founder and CEO of Notion. Designer and engineer focused on empowering people to shape their own software.',
+        profileUrl: 'https://twitter.com/ivanhzhao',
+        notes: ['Built Notion over 6 years before launch', 'Combines design and engineering'],
+        companyId: companies.find(c => c.name === 'Notion')?.id,
+      },
+    ],
+  });
+
+  // Create People Contacts
+  const people = await prisma.people.findMany();
+  await prisma.peopleContact.createMany({
+    data: people.map(person => ({
+      peopleId: person.id,
+      linkedin: `https://www.linkedin.com/in/${person.fullName.toLowerCase().replace(/\s+/g, '-')}`,
+      twitter: person.profileUrl || null,
+      email: `${person.fullName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+    })),
+  });
+
+  console.log('✅ People and contacts created');
+
   // Display summary
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('✅ Database seeded successfully!');
@@ -480,6 +543,8 @@ async function main() {
   const acceleratorCount = await prisma.accelerator.count();
   const companyCount = await prisma.company.count();
   const contactSourceCount = await prisma.contactSource.count();
+  const peopleCount = await prisma.people.count();
+  const peopleContactCount = await prisma.peopleContact.count();
 
   console.log('📊 Summary:');
   console.log(`   Users: ${userCount}`);
@@ -488,6 +553,8 @@ async function main() {
   console.log(`   Accelerators: ${acceleratorCount}`);
   console.log(`   Companies: ${companyCount}`);
   console.log(`   Contact Sources: ${contactSourceCount}`);
+  console.log(`   People: ${peopleCount}`);
+  console.log(`   People Contacts: ${peopleContactCount}`);
   console.log('');
   console.log('👤 Test Accounts (email/password):');
   console.log('   Admin: admin@future.lssgoo.com / admin123 (ADMIN)');
