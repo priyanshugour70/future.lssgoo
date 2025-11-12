@@ -9,13 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Loader2, Send, Plus, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, Plus, X, Bold, Italic, List, ListOrdered, Link as LinkIcon } from 'lucide-react';
 import { redirect } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css';
-
-// Dynamically import ReactQuill to avoid SSR issues
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { Link as TiptapLink } from '@tiptap/extension-link';
+import { Placeholder } from '@tiptap/extension-placeholder';
 
 export default function ComposeEmailPage() {
   const router = useRouter();
@@ -25,7 +24,21 @@ export default function ComposeEmailPage() {
   const [ccEmails, setCcEmails] = useState<string[]>([]);
   const [bccEmails, setBccEmails] = useState<string[]>([]);
   const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+
+  // Initialize TipTap editor
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      TiptapLink.configure({ openOnClick: false }),
+      Placeholder.configure({ placeholder: 'Write your email here...' }),
+    ],
+    content: '',
+    editorProps: {
+      attributes: {
+        class: 'tiptap min-h-[200px] p-4',
+      },
+    },
+  });
 
   if (!authLoading && (!user || user.role !== 'ADMIN')) {
     redirect('/');
@@ -46,8 +59,14 @@ export default function ComposeEmailPage() {
         return;
       }
 
-      // Strip HTML tags for plain text version
-      const plainText = body.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+      const bodyHtml = editor?.getHTML() || '';
+      const plainText = editor?.getText() || '';
+
+      if (!plainText.trim()) {
+        toast.error('Email body is required');
+        setIsSubmitting(false);
+        return;
+      }
 
       const payload = {
         to: validToEmails,
@@ -55,7 +74,7 @@ export default function ComposeEmailPage() {
         bcc: validBccEmails,
         subject,
         body: plainText,
-        bodyHtml: body,
+        bodyHtml: bodyHtml,
       };
 
       const response = await fetch('/api/v1/emails/send', {
@@ -87,15 +106,13 @@ export default function ComposeEmailPage() {
     );
   }
 
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      [{ color: [] }, { background: [] }],
-      ['link', 'image'],
-      ['clean'],
-    ],
+  const toggleBold = () => editor?.chain().focus().toggleBold().run();
+  const toggleItalic = () => editor?.chain().focus().toggleItalic().run();
+  const toggleBulletList = () => editor?.chain().focus().toggleBulletList().run();
+  const toggleOrderedList = () => editor?.chain().focus().toggleOrderedList().run();
+  const setLink = () => {
+    const url = window.prompt('Enter URL:');
+    if (url) editor?.chain().focus().setLink({ href: url }).run();
   };
 
   return (
@@ -249,15 +266,66 @@ export default function ComposeEmailPage() {
             {/* Body with Rich Text Editor */}
             <div className="space-y-2">
               <Label>Email Body *</Label>
-              <div className="border rounded-md">
-                <ReactQuill
-                  theme="snow"
-                  value={body}
-                  onChange={setBody}
-                  modules={modules}
-                  placeholder="Write your email here..."
-                  className="h-64"
-                />
+              
+              {/* Editor Toolbar */}
+              <div className="flex flex-wrap gap-1 rounded-t-md border border-b-0 bg-muted/50 p-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleBold}
+                  className={editor?.isActive('bold') ? 'bg-muted' : ''}
+                  disabled={isSubmitting}
+                >
+                  <Bold className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleItalic}
+                  className={editor?.isActive('italic') ? 'bg-muted' : ''}
+                  disabled={isSubmitting}
+                >
+                  <Italic className="h-4 w-4" />
+                </Button>
+                <div className="mx-1 w-px bg-border" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleBulletList}
+                  className={editor?.isActive('bulletList') ? 'bg-muted' : ''}
+                  disabled={isSubmitting}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleOrderedList}
+                  className={editor?.isActive('orderedList') ? 'bg-muted' : ''}
+                  disabled={isSubmitting}
+                >
+                  <ListOrdered className="h-4 w-4" />
+                </Button>
+                <div className="mx-1 w-px bg-border" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={setLink}
+                  className={editor?.isActive('link') ? 'bg-muted' : ''}
+                  disabled={isSubmitting}
+                >
+                  <LinkIcon className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Editor Content */}
+              <div className="rounded-b-md border bg-background">
+                <EditorContent editor={editor} />
               </div>
             </div>
 
