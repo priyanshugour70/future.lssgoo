@@ -300,7 +300,7 @@ model Conversation {
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   title             String?        // Auto-generated or custom title
-  model             String         @default("gemini-2.0-flash-exp") // AI model used
+  model             String         @default("gemini-2.5-flash") // AI model used
   
   // Timestamps
   createdAt         DateTime       @default(now()) @map("created_at")

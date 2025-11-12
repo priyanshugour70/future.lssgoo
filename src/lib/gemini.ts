@@ -5,7 +5,7 @@ export const ai = new GoogleGenAI({});
 
 export async function generateStreamingResponse(
   prompt: string,
-  model: string = 'gemini-2.0-flash-exp'
+  model: string = 'gemini-2.5-flash'
 ) {
   try {
     // The new SDK returns an AsyncGenerator directly
@@ -23,7 +23,7 @@ export async function generateStreamingResponse(
 
 export async function generateResponse(
   prompt: string,
-  model: string = 'gemini-2.0-flash-exp'
+  model: string = 'gemini-2.5-flash'
 ) {
   try {
     const response = await ai.models.generateContent({
