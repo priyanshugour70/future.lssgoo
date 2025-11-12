@@ -46,6 +46,7 @@ model User {
   accounts      Account[]
   auditLogs     AuditLog[]
   emails        Email[]
+  conversations Conversation[]
   
   @@map("users")
   @@index([email])
@@ -290,5 +291,51 @@ model Email {
   @@index([sentBy])
   @@index([status])
   @@index([sentAt])
+  @@index([createdAt])
+}
+
+model Conversation {
+  id                String         @id @default(uuid())
+  userId            String         @map("user_id")
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title             String?        // Auto-generated or custom title
+  model             String         @default("gemini-2.0-flash-exp") // AI model used
+  
+  // Timestamps
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  lastMessageAt     DateTime?      @map("last_message_at")
+  
+  // Relations
+  messages          Message[]
+  
+  @@map("conversations")
+  @@index([userId])
+  @@index([createdAt])
+  @@index([lastMessageAt])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model Message {
+  id                String         @id @default(uuid())
+  conversationId    String         @map("conversation_id")
+  conversation      Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  role              MessageRole
+  content           String         @db.Text
+  
+  // Metadata
+  tokens            Int?           // Token count if available
+  
+  // Timestamps
+  createdAt         DateTime       @default(now()) @map("created_at")
+  
+  @@map("messages")
+  @@index([conversationId])
   @@index([createdAt])
 }

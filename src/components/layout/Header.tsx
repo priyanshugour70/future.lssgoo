@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LogOut, Settings, Rocket, Mail } from 'lucide-react';
+import { User, LogOut, Settings, Rocket, Mail, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function Header() {
@@ -80,6 +80,13 @@ export function Header() {
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             People
+          </Link>
+          <Link
+            href="/ai"
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Sparkles className="h-4 w-4" />
+            AI Chat
           </Link>
           <Link
             href="/about"
