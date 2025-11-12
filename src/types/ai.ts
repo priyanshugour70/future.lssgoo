@@ -6,7 +6,7 @@ export type { Conversation, Message, MessageRole } from '@prisma/client';
 
 // Validation Schemas
 export const SendMessageSchema = z.object({
-  conversationId: z.string().uuid().optional(),
+  conversationId: z.string().uuid().nullable().optional(),
   message: z.string().min(1, 'Message is required'),
   model: z.string().optional().default('gemini-2.0-flash-exp'),
 });

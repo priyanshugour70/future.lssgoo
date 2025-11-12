@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     // Get or create conversation
     let conversation;
-    if (conversationId) {
+    if (conversationId && conversationId !== null) {
       conversation = await prisma.conversation.findFirst({
         where: {
           id: conversationId,
