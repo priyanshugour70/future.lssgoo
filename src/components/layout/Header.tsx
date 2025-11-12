@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LogOut, Settings, Rocket } from 'lucide-react';
+import { User, LogOut, Settings, Rocket, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function Header() {
@@ -137,6 +137,17 @@ export function Header() {
                     Settings
                   </Link>
                 </DropdownMenuItem>
+                {user.role === 'ADMIN' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/emails" className="cursor-pointer">
+                        <Mail className="mr-2 h-4 w-4" />
+                        Email Management
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="cursor-pointer text-destructive focus:text-destructive"

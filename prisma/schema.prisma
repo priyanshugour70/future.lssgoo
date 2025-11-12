@@ -45,6 +45,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   auditLogs     AuditLog[]
+  emails        Email[]
   
   @@map("users")
   @@index([email])
@@ -242,4 +243,52 @@ model PeopleContact {
   
   @@map("people_contacts")
   @@index([peopleId])
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  BOUNCED
+}
+
+model Email {
+  id                String         @id @default(uuid())
+  
+  // Sender (admin user who sent the email)
+  sentBy            String         @map("sent_by")
+  sender            User           @relation(fields: [sentBy], references: [id], onDelete: Cascade)
+  
+  // Recipients
+  to                String[]       // Array of recipient emails
+  cc                String[]       @default([])
+  bcc               String[]       @default([])
+  
+  // Email content
+  subject           String
+  body              String         @db.Text // HTML or plain text
+  bodyHtml          String?        @db.Text @map("body_html") // Rich HTML content
+  
+  // Metadata
+  status            EmailStatus    @default(PENDING)
+  sentAt            DateTime?      @map("sent_at")
+  failureReason     String?        @db.Text @map("failure_reason")
+  
+  // SMTP details
+  smtpResponse      String?        @db.Text @map("smtp_response")
+  messageId         String?        @map("message_id") // SMTP message ID
+  
+  // Tracking
+  ipAddress         String?        @map("ip_address")
+  userAgent         String?        @map("user_agent")
+  
+  // Timestamps
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  
+  @@map("emails")
+  @@index([sentBy])
+  @@index([status])
+  @@index([sentAt])
+  @@index([createdAt])
 }
