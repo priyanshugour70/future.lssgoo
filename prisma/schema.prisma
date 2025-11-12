@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  GITHUB
+}
+
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  password      String?       // Hashed password for email/password auth
+  name          String?
+  image         String?       // For NextAuth compatibility
+  avatarUrl     String?       @map("avatar_url")
+  role          Role          @default(USER)
+  authProvider  AuthProvider  @default(EMAIL) @map("auth_provider")
+  emailVerified DateTime?     @map("email_verified")
+  
+  // Metadata
+  metadata      Json?
+  
+  // Timestamps
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  lastLoginAt   DateTime?     @map("last_login_at")
+  
+  // Relations
+  sessions      Session[]
+  accounts      Account[]
+  auditLogs     AuditLog[]
+  
+  @@map("users")
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  
+  // Timestamps
+  createdAt    DateTime @default(now()) @map("created_at")
+  lastActiveAt DateTime @default(now()) @map("last_active_at")
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  userId      String?   @map("user_id")
+  action      String
+  resource    String
+  details     Json?
+  ipAddress   String?   @map("ip_address")
+  userAgent   String?   @map("user_agent")
+  
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at")
+  
+  // Relations
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Accelerator {
+  id                String   @id @default(uuid())
+  title             String
+  description       String   @db.Text
+  whyItStandsOut    String   @db.Text @map("why_it_stands_out")
+  averageFunding    String?  @map("average_funding") // e.g., "$125K - $500K"
+  fundedCompanies   Int?     @map("funded_companies") // Number of companies funded
+  foundedYear       Int?     @map("founded_year")
+  country           String?
+  type              String?  // e.g., "Global", "Regional", "Industry-specific"
+  website           String?
+  logoUrl           String?  @map("logo_url")
+  
+  // Timestamps
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  companies         Company[]
+  
+  @@map("accelerators")
+  @@index([title])
+  @@index([country])
+  @@index([foundedYear])
+}
+
+model Company {
+  id                String         @id @default(uuid())
+  name              String
+  tagline           String?
+  description       String         @db.Text
+  companySize       String?        @map("company_size") // e.g., "1-10", "11-50", "51-200", "201-500", "501+"
+  techStack         String[]       @map("tech_stack") // Array of technologies (Java, Python, React, etc.)
+  domain            String?        // Primary business domain
+  sector            String?        // Industry sector
+  vision            String?        @db.Text
+  foundedYear       Int?           @map("founded_year")
+  website           String?
+  logoUrl           String?        @map("logo_url")
+  location          String?        // Company headquarters location
+  fundingStage      String?        @map("funding_stage") // e.g., "Pre-seed", "Seed", "Series A", etc.
+  
+  // Relation to Accelerator
+  acceleratorId     String?        @map("accelerator_id")
+  accelerator       Accelerator?   @relation(fields: [acceleratorId], references: [id], onDelete: SetNull)
+  
+  // Timestamps
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  
+  // Relations
+  contactSource     ContactSource?
+  
+  @@map("companies")
+  @@index([name])
+  @@index([acceleratorId])
+  @@index([sector])
+  @@index([fundingStage])
+}
+
+model ContactSource {
+  id                String         @id @default(uuid())
+  companyId         String         @unique @map("company_id")
+  company           Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  instagram         String?
+  linkedin          String?
+  twitter           String?
+  facebook          String?
+  contactNumber     String?        @map("contact_number")
+  emails            String[]       // Array of contact emails
+  
+  // Timestamps
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  
+  @@map("contact_sources")
+  @@index([companyId])
+}
