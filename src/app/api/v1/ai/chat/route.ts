@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
     const validation = SendMessageSchema.safeParse(body);
 
     if (!validation.success) {
+      console.error('Validation error:', validation.error.issues);
       const response: APIResponse = {
         success: false,
         error: {

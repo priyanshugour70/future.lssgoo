@@ -8,7 +8,7 @@ export type { Conversation, Message, MessageRole } from '@prisma/client';
 export const SendMessageSchema = z.object({
   conversationId: z.string().uuid().optional(),
   message: z.string().min(1, 'Message is required'),
-  model: z.string().default('gemini-2.0-flash-exp'),
+  model: z.string().optional().default('gemini-2.0-flash-exp'),
 });
 
 export type SendMessageInput = z.infer<typeof SendMessageSchema>;
